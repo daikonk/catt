@@ -13,7 +13,6 @@ const (
 
 	IF    = "IF"
 	ELSE  = "ELSE"
-	WHILE = "WHILE"
 	IDENT = "IDENT"
 
 	ASSIGN = "="
@@ -45,6 +44,9 @@ const (
 
 	BANG  = "!"
 	MINUS = "-"
+
+	WHILE = "WHILE"
+	FOR   = "FOR"
 )
 
 // keywords dict for indetifiers
@@ -55,6 +57,7 @@ var keywords = map[string]TokenType{
 	"if":     IF,
 	"else":   ELSE,
 	"while":  WHILE,
+	"for":    FOR,
 	"fn":     FUNCTION,
 	"return": RETURN,
 }

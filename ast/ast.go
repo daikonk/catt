@@ -183,6 +183,35 @@ func (b *Boolean) String() string {
 	return b.Token.Literal
 }
 
+type ForExpression struct {
+	Token       token.Token
+	Declaration Statement
+	Condition   Expression
+	Increment   Statement
+	Consequence *BlockStatement
+}
+
+func (fe *ForExpression) expressionNode() {}
+
+func (fe *ForExpression) TokenLiteral() string {
+	return fe.Token.Literal
+}
+
+func (fe *ForExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("for")
+	out.WriteString(fe.Declaration.String())
+	out.WriteString(" ")
+	out.WriteString(fe.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(fe.Increment.String())
+	out.WriteString(" ")
+	out.WriteString(fe.Consequence.String())
+
+	return out.String()
+}
+
 type WhileExpression struct {
 	Token       token.Token
 	Condition   Expression

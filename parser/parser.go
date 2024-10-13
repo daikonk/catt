@@ -72,6 +72,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.IF, p.parseIfExpression)
 	p.registerPrefixFn(token.STRING, p.ParseString)
 	p.registerPrefixFn(token.WHILE, p.ParseWhileExpression)
+	p.registerPrefixFn(token.FOR, p.ParseForExpression)
 	p.registerPrefixFn(token.FUNCTION, p.ParseFunctionLiteral)
 
 	p.infixParserFns = make(map[token.TokenType]infixParserFn)
@@ -185,6 +186,39 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	return block
+}
+
+func (p *Parser) ParseForExpression() ast.Expression {
+	expr := &ast.ForExpression{Token: p.currToken}
+
+	if !p.PeekAndMove(token.LPAR) {
+		return nil
+	}
+
+	p.NextToken()
+	expr.Declaration = p.parseLetStatement()
+
+	p.NextToken()
+	expr.Condition = p.parseExpression(LOWEST)
+
+	if !p.PeekAndMove(token.SEMICOLON) {
+		return nil
+	}
+
+	p.NextToken()
+	expr.Increment = p.parseStatement()
+
+	if !p.PeekAndMove(token.RPAR) {
+		return nil
+	}
+
+	if !p.PeekAndMove(token.LBRAC) {
+		return nil
+	}
+
+	expr.Consequence = p.parseBlockStatement()
+
+	return expr
 }
 
 func (p *Parser) ParseWhileExpression() ast.Expression {

@@ -12,6 +12,7 @@ func TestNextToken(t *testing.T) {
   fn
 "foobar"
 "foo bar"
+  for (var i = 0; i < 10; var i = i + 1) { 10 / 10 };
 `
 	tests := []struct {
 		expectedType    token.TokenType
@@ -34,6 +35,30 @@ func TestNextToken(t *testing.T) {
 		{token.FUNCTION, "fn"},
 		{token.STRING, "foobar"},
 		{token.STRING, "foo bar"},
+		{token.FOR, "for"},
+		{token.LPAR, "("},
+		{token.VAR, "var"},
+		{token.IDENT, "i"},
+		{token.ASSIGN, "="},
+		{token.INT, "0"},
+		{token.SEMICOLON, ";"},
+		{token.IDENT, "i"},
+		{token.LT, "<"},
+		{token.INT, "10"},
+		{token.SEMICOLON, ";"},
+		{token.VAR, "var"},
+		{token.IDENT, "i"},
+		{token.ASSIGN, "="},
+		{token.IDENT, "i"},
+		{token.PLUS, "+"},
+		{token.INT, "1"},
+		{token.RPAR, ")"},
+		{token.LBRAC, "{"},
+		{token.INT, "10"},
+		{token.SLASH, "/"},
+		{token.INT, "10"},
+		{token.RBRAC, "}"},
+		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}
 	l := New(input)
