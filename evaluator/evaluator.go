@@ -88,6 +88,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 	case *ast.WhileExpression:
 		return evalWhileExpression(node, env)
+	case *ast.ForExpression:
+		return evalForExpression(node, env)
 
 	case *ast.LetStatement:
 		val := Eval(node.Value, env)
@@ -225,6 +227,14 @@ func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Obje
 func evalWhileExpression(we *ast.WhileExpression, env *object.Environment) object.Object {
 	for eval := Eval(we.Condition, env); isTruthy(eval); eval = Eval(we.Condition, env) {
 		Eval(we.Consequence, env)
+	}
+
+	return nil
+}
+
+func evalForExpression(fe *ast.ForExpression, env *object.Environment) object.Object {
+	for Eval(fe.Declaration, env); isTruthy(Eval(fe.Condition, env)); Eval(fe.Increment, env) {
+		Eval(fe.Consequence, env)
 	}
 
 	return nil
