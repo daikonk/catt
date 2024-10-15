@@ -21,11 +21,15 @@ var builtins = map[string]*object.BuiltIn{
 
 			switch arg := args[0].(type) {
 			case *object.String:
-				fmt.Printf(arg.Value)
+				fmt.Print(arg.Value)
 				return &object.String{Value: arg.Value}
 
 			case *object.Integer:
-				fmt.Printf(arg.Inspect())
+				fmt.Print(arg.Inspect())
+				return &object.String{Value: arg.Inspect()}
+
+			case *object.Boolean:
+				fmt.Print(arg.Inspect())
 				return &object.String{Value: arg.Inspect()}
 
 			default:
@@ -45,6 +49,10 @@ var builtins = map[string]*object.BuiltIn{
 				return &object.String{Value: arg.Value}
 
 			case *object.Integer:
+				fmt.Println(arg.Inspect())
+				return &object.String{Value: arg.Inspect()}
+
+			case *object.Boolean:
 				fmt.Println(arg.Inspect())
 				return &object.String{Value: arg.Inspect()}
 
@@ -261,6 +269,18 @@ func evalInfixExpression(op string, right object.Object, left object.Object) obj
 		return nativeToObjectBool(right == left)
 	case op == "!=":
 		return nativeToObjectBool(right != left)
+	case op == "&&":
+		if left == TRUE && right == TRUE {
+			return TRUE
+		} else {
+			return FALSE
+		}
+	case op == "||":
+		if left == TRUE || right == TRUE {
+			return TRUE
+		} else {
+			return FALSE
+		}
 	default:
 		return NULL
 	}

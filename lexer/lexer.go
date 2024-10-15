@@ -41,6 +41,18 @@ func (l *Lexer) NextToken() token.Token {
 	case '"':
 		tkn.Type = token.STRING
 		tkn.Literal = l.ReadString()
+	case '&':
+		if l.peekChar() == '&' {
+			ch := l.ch
+			l.readChar()
+			tkn = token.Token{Type: token.AND, Literal: string(ch) + string(l.ch)}
+		}
+	case '|':
+		if l.peekChar() == '|' {
+			ch := l.ch
+			l.readChar()
+			tkn = token.Token{Type: token.OR, Literal: string(ch) + string(l.ch)}
+		}
 	case '=':
 		if l.peekChar() == '=' {
 			ch := l.ch

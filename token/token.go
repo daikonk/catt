@@ -20,8 +20,11 @@ const (
 	ASTR   = "*"
 	SLASH  = "/"
 	MODULO = "%"
-	TRUE   = "TRUE"
-	FALSE  = "FALSE"
+
+	TRUE  = "TRUE"
+	FALSE = "FALSE"
+	AND   = "&&"
+	OR    = "||"
 
 	EQ     = "=="
 	NOT_EQ = "!="
