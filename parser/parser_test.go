@@ -109,5 +109,3 @@ func testInfixExpression(t *testing.T, exp ast.Expression, left interface{},
 	}
 	return true
 }
-
-testInfixExpression();

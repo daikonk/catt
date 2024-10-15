@@ -236,10 +236,11 @@ func (we *WhileExpression) String() string {
 }
 
 type IfExpression struct {
-	Token       token.Token
-	Condition   Expression
-	Consequence *BlockStatement
-	Alternative *BlockStatement
+	Token           token.Token
+	Condition       Expression
+	Consequence     *BlockStatement
+	CondAlternative Expression
+	Alternative     *BlockStatement
 }
 
 func (ife *IfExpression) expressionNode() {}
@@ -255,6 +256,11 @@ func (ife *IfExpression) String() string {
 	out.WriteString(ife.Condition.String())
 	out.WriteString(" ")
 	out.WriteString(ife.Consequence.String())
+
+	if ife.CondAlternative != nil {
+		out.WriteString("else ")
+		out.WriteString(ife.CondAlternative.String())
+	}
 
 	if ife.Alternative != nil {
 		out.WriteString("else ")

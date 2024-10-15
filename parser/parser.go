@@ -272,12 +272,18 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 		p.NextToken()
 
-		if !p.PeekAndMove(token.LBRAC) {
+		switch p.aftToken.Type {
+		case token.IF:
+			p.NextToken()
+			expr.CondAlternative = p.parseIfExpression()
+
+		case token.LBRAC:
+			p.NextToken()
+			expr.Alternative = p.parseBlockStatement()
+
+		default:
 			return nil
 		}
-
-		expr.Alternative = p.parseBlockStatement()
-
 	}
 
 	return expr
