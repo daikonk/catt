@@ -1,4 +1,4 @@
-for (var i = 1; i < 100; var i = i + 1) {
+for (var i = 1; i < 100; var i = i + 1;) {
   if (i % 3 == 0) {
     puts("Fizz");
   }
@@ -12,5 +12,4 @@ for (var i = 1; i < 100; var i = i + 1) {
   }
   
   putsln("");
-  var i = i + 1;
 }
