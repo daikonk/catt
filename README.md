@@ -14,6 +14,6 @@ go run main.go /PATH/TO/FILE/HERE
 
 ## ToDo
 
-- ~~add For loop functionality
-- ~~fix argument parsing for functions
+- ~~add For loop functionality~~
+- ~~fix argument parsing for functions~~
 - add light documentation for E/BNF rules and built-ins on readme
