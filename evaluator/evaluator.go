@@ -4,64 +4,102 @@ import (
 	"fmt"
 	"go_interpreter/ast"
 	"go_interpreter/object"
+	"time"
 )
 
 var (
-	TRUE  = &object.Boolean{Value: true}
-	FALSE = &object.Boolean{Value: false}
-	NULL  = &object.Null{}
+	TRUE     = &object.Boolean{Value: true}
+	FALSE    = &object.Boolean{Value: false}
+	NULL     = &object.Null{}
+	builtins = map[string]*object.BuiltIn{}
 )
 
-var builtins = map[string]*object.BuiltIn{
-	"puts": {
-		Fn: func(args ...object.Object) object.Object {
-			if len(args) != 1 {
-				return newError("supports 1 argument, got: %d", len(args))
-			}
+func init() {
+	builtins = map[string]*object.BuiltIn{
+		"meow": {
+			Fn: func(args ...object.Object) object.Object {
+				if len(args) != 1 {
+					return newError("supports 1 argument, got: %d", len(args))
+				}
 
-			switch arg := args[0].(type) {
-			case *object.String:
-				fmt.Print(arg.Value)
-				return &object.String{Value: arg.Value}
+				switch arg := args[0].(type) {
+				case *object.String:
+					fmt.Print(arg.Value)
+					return &object.String{Value: arg.Value}
 
-			case *object.Integer:
-				fmt.Print(arg.Inspect())
-				return &object.String{Value: arg.Inspect()}
+				case *object.Integer:
+					fmt.Print(arg.Inspect())
+					return &object.String{Value: arg.Inspect()}
 
-			case *object.Boolean:
-				fmt.Print(arg.Inspect())
-				return &object.String{Value: arg.Inspect()}
+				case *object.Boolean:
+					fmt.Print(arg.Inspect())
+					return &object.String{Value: arg.Inspect()}
 
-			default:
-				return newError("argument type is not supported: %s", arg.Type())
+				case *object.Channel:
+					// Handle channel receive
+					select {
+					case val := <-arg.Value:
+						fmt.Print(val.Inspect())
+						return val
+					case <-time.After(time.Second):
+						// this might be bad for more complex tasks
+						return newError("channel timeout - nothing to prowl")
+					}
 
-			}
+				default:
+					return newError("argument type is not supported: %s", arg.Type())
+				}
+			},
 		},
-	},
-	"putsln": {
-		Fn: func(args ...object.Object) object.Object {
-			if len(args) != 1 {
-				return newError("supports 1 argument, got: %d", len(args))
-			}
+		"meowln": {
+			Fn: func(args ...object.Object) object.Object {
+				if len(args) != 1 {
+					return newError("supports 1 argument, got: %d", len(args))
+				}
 
-			switch arg := args[0].(type) {
-			case *object.String:
-				fmt.Println(arg.Value)
-				return &object.String{Value: arg.Value}
+				switch arg := args[0].(type) {
+				case *object.String:
+					fmt.Println(arg.Value)
+					return &object.String{Value: arg.Value}
 
-			case *object.Integer:
-				fmt.Println(arg.Inspect())
-				return &object.String{Value: arg.Inspect()}
+				case *object.Integer:
+					fmt.Println(arg.Inspect())
+					return &object.String{Value: arg.Inspect()}
 
-			case *object.Boolean:
-				fmt.Println(arg.Inspect())
-				return &object.String{Value: arg.Inspect()}
+				case *object.Boolean:
+					fmt.Println(arg.Inspect())
+					return &object.String{Value: arg.Inspect()}
 
-			default:
-				return newError("argument type is not supported: %s", arg.Type())
-			}
+				default:
+					return newError("argument type is not supported: %s", arg.Type())
+				}
+			},
 		},
-	},
+		"rest": {
+			Fn: func(args ...object.Object) object.Object {
+				if len(args) != 1 {
+					return newError("supports 1 argument, got: %d", len(args))
+				}
+
+				switch arg := args[0].(type) {
+				case *object.Integer:
+					time.Sleep(time.Duration(arg.Value) * time.Millisecond)
+					return &object.String{Value: arg.Inspect()}
+
+				default:
+					return newError("argument type is not supported: %s", arg.Type())
+				}
+			},
+		},
+		"noct": {
+			Fn: func(args ...object.Object) object.Object {
+				if len(args) != 0 {
+					return newError("noct takes no arguments, got %d", len(args))
+				}
+				return &object.Channel{Value: make(chan object.Object)}
+			},
+		},
+	}
 }
 
 func Eval(node ast.Node, env *object.Environment) object.Object {
@@ -70,7 +108,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.String{node.Value}
 	case *ast.Program:
 		return evalProgram(node, env)
-
+	case *ast.ChannelExpression:
+		return evalChannelExpression(node, env)
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
 
@@ -133,16 +172,22 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Function{Parameters: params, Env: env, Body: body}
 
 	case *ast.CallExpression:
+		// Check for prowl first, before any evaluation
+		if node.Function.TokenLiteral() == "prowl" {
+			return evalProwlExpression(node, env)
+		}
+
+		// Only evaluate the function and args for non-prowl calls
 		function := Eval(node.Function, env)
 		if isError(function) {
 			return function
 		}
 
 		args := evalExpressions(node.Arguments, env)
-
 		if len(args) == 1 && isError(args[0]) {
 			return args[0]
 		}
+
 		return applyFunction(function, args)
 	}
 
@@ -173,6 +218,66 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 
 	default:
 		return newError("not a function: %s", fn.Type())
+	}
+}
+
+func evalProwlExpression(node *ast.CallExpression, env *object.Environment) object.Object {
+	// Launch goroutine immediately with just the raw nodes
+	go func(call *ast.CallExpression, currentEnv *object.Environment) {
+		// Do all evaluation inside goroutine
+		if len(call.Arguments) != 1 {
+			return
+		}
+
+		funcCall, ok := call.Arguments[0].(*ast.CallExpression)
+		if !ok {
+			return
+		}
+
+		// Create environment copy inside goroutine
+		prowlEnv := object.NewEnclosedEnvironment(currentEnv)
+
+		// Do evaluation inside goroutine
+		Eval(&ast.ExpressionStatement{Expression: funcCall}, prowlEnv)
+	}(node, env)
+
+	// Return immediately with no evaluation or checking
+	return NULL
+}
+
+func evalChannelExpression(node *ast.ChannelExpression, env *object.Environment) object.Object {
+	channel := Eval(node.Channel, env)
+	if isError(channel) {
+		return channel
+	}
+
+	ch, ok := channel.(*object.Channel)
+	if !ok {
+		return newError("invalid channel operation on %s", channel.Type())
+	}
+
+	if node.Value != nil {
+		val := Eval(node.Value, env)
+		if isError(val) {
+			return val
+		}
+
+		select {
+		case ch.Value <- val:
+			return val
+		default:
+			go func() {
+				ch.Value <- val
+			}()
+			return val
+		}
+	} else {
+		select {
+		case val := <-ch.Value:
+			return val
+		case <-time.After(time.Second):
+			return newError("channel timeout - nothing to prowl")
+		}
 	}
 }
 
@@ -359,6 +464,32 @@ func evalInfixExpression(op string, right object.Object, left object.Object) obj
 		return newError("type mismatch: %s %s %s", left.Type(), op, right.Type())
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		return evalInfixIntegerExpression(op, right, left)
+	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ && op == "+":
+		return &object.String{Value: left.(*object.String).Value + right.(*object.String).Value}
+	case op == "<-":
+		switch {
+		case left.Type() == object.CHANNEL_OBJ:
+			ch := left.(*object.Channel)
+			select {
+			case ch.Value <- right:
+				return right
+			default:
+				go func() {
+					ch.Value <- right
+				}()
+				return right
+			}
+		case right.Type() == object.CHANNEL_OBJ:
+			ch := right.(*object.Channel)
+			select {
+			case val := <-ch.Value:
+				return val
+			case <-time.After(time.Second):
+				return newError("channel timeout - nothing to prowl")
+			}
+		default:
+			return newError("invalid channel operation %s %s %s", left.Type(), op, right.Type())
+		}
 	case op == "==":
 		return nativeToObjectBool(right == left)
 	case op == "!=":

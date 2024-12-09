@@ -8,6 +8,8 @@ type Token struct {
 }
 
 const (
+	PROWL = "PROWL"
+
 	INT    = "INT"
 	STRING = "STRING"
 
@@ -26,10 +28,11 @@ const (
 	AND   = "&&"
 	OR    = "||"
 
-	EQ     = "=="
-	NOT_EQ = "!="
-	LT     = "<"
-	GT     = ">"
+	EQ      = "=="
+	NOT_EQ  = "!="
+	LT      = "<"
+	GT      = ">"
+	CHAN_OP = "<-"
 
 	COMMA     = ","
 	SEMICOLON = ";"
@@ -54,14 +57,15 @@ const (
 
 // keywords dict for indetifiers
 var keywords = map[string]TokenType{
+	"prowl":  PROWL,
 	"var":    VAR,
 	"false":  FALSE,
 	"true":   TRUE,
 	"if":     IF,
 	"else":   ELSE,
-	"while":  WHILE,
-	"for":    FOR,
-	"fn":     FUNCTION,
+	"chase":  WHILE,
+	"stalk":  FOR,
+	"func":   FUNCTION,
 	"return": RETURN,
 }
 

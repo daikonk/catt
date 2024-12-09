@@ -23,7 +23,21 @@ const (
 	RETURN_VAL_OBJ = "RETURN_VAL_OBJ"
 	FUNCTION_OBJ   = "FUNCTION_OBJ"
 	BUILTIN_OBJ    = "BUILTIN"
+	CHANNEL_OBJ    = "CHANNEL"
+	ROUTINE_OBJ    = "ROUTINE"
 )
+
+type Channel struct {
+	Value chan Object
+}
+
+func (c *Channel) Type() ObjectType {
+	return CHANNEL_OBJ
+}
+
+func (c *Channel) Inspect() string {
+	return "channel"
+}
 
 type BuiltInFunction func(args ...Object) Object
 

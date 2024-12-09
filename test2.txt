@@ -5,10 +5,8 @@ for (var i = 1; i < 100; var i = i + 1;) {
   if (i % 5 == 0) {
     puts("Buzz");
   }
-  if (i % 3 != 0) {
-    if (i % 5 != 0) {
-      puts(i);
-    }
+  if ((i % 3 != 0) && (i % 5 != 0)) {
+    puts(i);
   }
   
   putsln("");

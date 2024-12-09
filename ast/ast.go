@@ -43,6 +43,31 @@ func (p *Program) String() string {
 	return out.String()
 }
 
+type ChannelExpression struct {
+	Token   token.Token // The '<-' token
+	Channel Expression  // The channel being operated on
+	Value   Expression  // The value being sent (nil for receive operations)
+}
+
+func (ce *ChannelExpression) expressionNode()      {}
+func (ce *ChannelExpression) TokenLiteral() string { return ce.Token.Literal }
+func (ce *ChannelExpression) String() string {
+	var out bytes.Buffer
+
+	if ce.Value != nil {
+		// Send operation
+		out.WriteString(ce.Channel.String())
+		out.WriteString(" <- ")
+		out.WriteString(ce.Value.String())
+	} else {
+		// Receive operation
+		out.WriteString("<-")
+		out.WriteString(ce.Channel.String())
+	}
+
+	return out.String()
+}
+
 type Identifier struct {
 	Token token.Token
 	Value string

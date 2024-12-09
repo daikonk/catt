@@ -25,18 +25,19 @@ const (
 )
 
 var precedences = map[token.TokenType]int{
-	token.EQ:     EQUALS,
-	token.NOT_EQ: EQUALS,
-	token.AND:    LESSGREATER,
-	token.OR:     LESSGREATER,
-	token.LT:     LESSGREATER,
-	token.GT:     LESSGREATER,
-	token.MINUS:  SUM,
-	token.PLUS:   SUM,
-	token.ASTR:   PRODUCT,
-	token.SLASH:  PRODUCT,
-	token.MODULO: PRODUCT,
-	token.LPAR:   CALL,
+	token.CHAN_OP: LOWEST + 1,
+	token.EQ:      EQUALS,
+	token.NOT_EQ:  EQUALS,
+	token.AND:     LESSGREATER,
+	token.OR:      LESSGREATER,
+	token.LT:      LESSGREATER,
+	token.GT:      LESSGREATER,
+	token.MINUS:   SUM,
+	token.PLUS:    SUM,
+	token.ASTR:    PRODUCT,
+	token.SLASH:   PRODUCT,
+	token.MODULO:  PRODUCT,
+	token.LPAR:    CALL,
 }
 
 func (p *Parser) registerPrefixFn(tokenType token.TokenType, fn prefixParserFn) {
@@ -76,6 +77,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.WHILE, p.ParseWhileExpression)
 	p.registerPrefixFn(token.FOR, p.ParseForExpression)
 	p.registerPrefixFn(token.FUNCTION, p.ParseFunctionLiteral)
+	p.registerPrefixFn(token.CHAN_OP, p.parseChannelReceive)
+	p.registerPrefixFn(token.PROWL, p.parseGoroutineSpawn)
 
 	p.infixParserFns = make(map[token.TokenType]infixParserFn)
 	p.registerInfixFn(token.PLUS, p.parseInfixExpression)
@@ -90,8 +93,44 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfixFn(token.GT, p.parseInfixExpression)
 	p.registerInfixFn(token.MODULO, p.parseInfixExpression)
 	p.registerInfixFn(token.LPAR, p.ParseCallExpression)
+	p.registerInfixFn(token.CHAN_OP, p.parseChannelSend)
 
 	return p
+}
+
+func (p *Parser) parseChannelReceive() ast.Expression {
+	expr := &ast.ChannelExpression{
+		Token: p.currToken,
+	}
+
+	p.NextToken()
+	expr.Channel = p.parseExpression(PREFIX)
+
+	return expr
+}
+
+func (p *Parser) parseChannelSend(channel ast.Expression) ast.Expression {
+	expr := &ast.ChannelExpression{
+		Token:   p.currToken,
+		Channel: channel,
+	}
+
+	precedence := p.CurPrecedence()
+	p.NextToken()
+	expr.Value = p.parseExpression(precedence)
+
+	return expr
+}
+
+func (p *Parser) parseGoroutineSpawn() ast.Expression {
+	if !p.PeekAndMove(token.IDENT) {
+		return nil
+	}
+
+	function := p.parseIdentifier()
+	p.NextToken()
+
+	return p.ParseCallExpression(function)
 }
 
 func (p *Parser) ParseCallExpression(function ast.Expression) ast.Expression {

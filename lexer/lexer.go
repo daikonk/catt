@@ -90,7 +90,13 @@ func (l *Lexer) NextToken() token.Token {
 	case '*':
 		tkn = newToken(token.ASTR, l.ch)
 	case '<':
-		tkn = newToken(token.LT, l.ch)
+		if l.peekChar() == '-' {
+			ch := l.ch
+			l.readChar()
+			tkn = token.Token{Type: token.CHAN_OP, Literal: string(ch) + string(l.ch)}
+		} else {
+			tkn = newToken(token.LT, l.ch)
+		}
 	case '>':
 		tkn = newToken(token.GT, l.ch)
 	case 0:
