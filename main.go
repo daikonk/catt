@@ -34,8 +34,11 @@ func main() {
 		if len(p.Errors()) != 0 {
 			printParserErrors(os.Stdout, p.Errors())
 		}
+		// io.WriteString(os.Stdout, program.String())
+		// io.WriteString(os.Stdout, "\n")
+
 		evaluated := evaluator.Eval(program, env)
-		if evaluated != nil {
+		if evaluated.Type() == object.ERROR_OBJ {
 			io.WriteString(os.Stdout, evaluated.Inspect())
 			io.WriteString(os.Stdout, "\n")
 		}

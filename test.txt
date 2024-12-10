@@ -1,17 +1,15 @@
 var i = 1;
 while (i < 101) {
   if (i % 3 == 0) {
-    puts("Fizz");
+    meow("Fizz");
   }
-  if (i % 5 == 0) {
-    puts("Buzz");
+  else if (i % 5 == 0) {
+    meow("Buzz");
   }
-  if (i % 3 != 0) {
-    if (i % 5 != 0) {
-      puts(i);
-    }
+  else if ((i % 3 != 0) && (i % 5 != 0)) {
+      meow(i);
   }
-  
-  putsln("");
+
+  meowln("");
   var i = i + 1;
 };

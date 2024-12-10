@@ -35,10 +35,12 @@ const (
 	SEMICOLON = ";"
 	EOF       = "EOF"
 
-	LPAR  = "("
-	RPAR  = ")"
-	LBRAC = "{"
-	RBRAC = "}"
+	LPAR     = "("
+	RPAR     = ")"
+	LBRAC    = "{"
+	RBRAC    = "}"
+	LBRACKET = "["
+	RBRACKET = "]"
 
 	VAR         = "VAR"
 	FUNCTION    = "FUNCTION"
