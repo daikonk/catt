@@ -467,7 +467,7 @@ func evalInfixExpression(op string, right object.Object, left object.Object) obj
 	case left.Type() != right.Type():
 		return newError("type mismatch: %s %s %s", left.Type(), op, right.Type())
 	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
-		return evalInfixStringExpression(op, left, right)
+		return evalInfixStringExpression(op, right, left)
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		return evalInfixIntegerExpression(op, right, left)
 	case op == "==":
@@ -497,7 +497,7 @@ func evalInfixStringExpression(op string, right object.Object, left object.Objec
 
 	switch op {
 	case "+":
-		return &object.String{Value: left_val + right_val}
+		return &object.String{Value: fmt.Sprintf("%s%s", left_val, right_val)}
 	default:
 		return NULL
 	}
