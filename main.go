@@ -38,9 +38,11 @@ func main() {
 		// io.WriteString(os.Stdout, "\n")
 
 		evaluated := evaluator.Eval(program, env)
-		if evaluated.Type() == object.ERROR_OBJ {
-			io.WriteString(os.Stdout, evaluated.Inspect())
-			io.WriteString(os.Stdout, "\n")
+		if evaluated != nil {
+			if evaluated.Type() == object.ERROR_OBJ {
+				io.WriteString(os.Stdout, evaluated.Inspect())
+				io.WriteString(os.Stdout, "\n")
+			}
 		}
 	} else {
 		user, err := user.Current()
@@ -52,7 +54,7 @@ func main() {
 			`    ` + "`" + `-.-' \ )-` + "`" + `( , o o)` + "\n" +
 			`          ` + "`" + `-    \` + "`" + `_` + "`" + ` '-`)
 
-		fmt.Printf("\nHello %s! This is the meatball programming language\n\n",
+		fmt.Printf("\nwelcome %s, to catt\n\n",
 			user.Username)
 		repl.Start(os.Stdin, os.Stdout)
 	}

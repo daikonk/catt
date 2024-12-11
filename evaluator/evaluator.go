@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go_interpreter/ast"
 	"go_interpreter/object"
+	"go_interpreter/utils"
 )
 
 var (
@@ -32,6 +33,10 @@ var builtins = map[string]*object.BuiltIn{
 				fmt.Print(arg.Inspect())
 				return &object.String{Value: arg.Inspect()}
 
+			case *object.Array:
+				fmt.Print(arg.Inspect())
+				return &object.String{Value: arg.Inspect()}
+
 			default:
 				return newError("argument type is not supported: %s", arg.Type())
 
@@ -57,8 +62,73 @@ var builtins = map[string]*object.BuiltIn{
 				fmt.Println(arg.Inspect())
 				return &object.String{Value: arg.Inspect()}
 
+			case *object.Array:
+				fmt.Print(arg.Inspect())
+				return &object.String{Value: arg.Inspect()}
+
 			default:
 				return newError("argument type is not supported: %s", arg.Type())
+			}
+		},
+	},
+	"cattfusion": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("supports 1 argument, got: %d", len(args))
+			}
+			switch arg := args[0].(type) {
+			case *object.String:
+				res := utils.Cattfusion(arg.Value)
+				return &object.String{Value: res}
+			default:
+				return newError("argument type is not supported: %s", arg.Type())
+			}
+		},
+	},
+	"cattify": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("supports 1 argument, got: %d", len(args))
+			}
+			switch arg := args[0].(type) {
+			case *object.String:
+				res, err := utils.Cattify(arg.Value)
+				if res == "" {
+					return newError(err)
+				}
+				return &object.String{Value: res}
+			default:
+				return newError("argument type is not supported: %s", arg.Type())
+
+			}
+		},
+	},
+	"cattsort": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("supports 1 argument, got: %d", len(args))
+			}
+			switch arg := args[0].(type) {
+			case *object.Array:
+				res, err := utils.Cattsort(arg)
+				if res == nil {
+					if err == "" {
+						return newError(".., too lazy to sort imma nap instead")
+					} else {
+						return newError(err)
+					}
+				}
+				return res
+
+			case *object.Integer:
+				return &object.String{Value: arg.Inspect()}
+
+			case *object.Boolean:
+				return &object.String{Value: arg.Inspect()}
+
+			default:
+				return newError("argument type is not supported: %s", arg.Type())
+
 			}
 		},
 	},
@@ -67,7 +137,7 @@ var builtins = map[string]*object.BuiltIn{
 func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case *ast.String:
-		return &object.String{node.Value}
+		return &object.String{Value: node.Value}
 	case *ast.Program:
 		return evalProgram(node, env)
 
@@ -396,6 +466,8 @@ func evalInfixExpression(op string, right object.Object, left object.Object) obj
 	switch {
 	case left.Type() != right.Type():
 		return newError("type mismatch: %s %s %s", left.Type(), op, right.Type())
+	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
+		return evalInfixStringExpression(op, left, right)
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		return evalInfixIntegerExpression(op, right, left)
 	case op == "==":
@@ -416,6 +488,18 @@ func evalInfixExpression(op string, right object.Object, left object.Object) obj
 		}
 	default:
 		return newError("unknown infix operator: %s%s%s", left.Type(), op, right.Type())
+	}
+}
+
+func evalInfixStringExpression(op string, right object.Object, left object.Object) object.Object {
+	left_val := left.(*object.String).Value
+	right_val := right.(*object.String).Value
+
+	switch op {
+	case "+":
+		return &object.String{Value: left_val + right_val}
+	default:
+		return NULL
 	}
 }
 
